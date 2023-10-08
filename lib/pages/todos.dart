@@ -1,11 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:miappfeita/shared/barra_lateral.dart';
 
 class TodosPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Text('Hola Mundo'),
+      drawer: const Drawer(
+        child: BarraLateral(),
+      ),
+      appBar: AppBar(
+        title: const Text("Mi app feita TODO LISTaaaa"),
+      ),
+      body: SafeArea(
+        child: Center(
+          child: Text('Tasks'),
+        ),
       ),
     );
   }
@@ -20,18 +29,6 @@ class Task extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Icon(icon, color: color),
-        // Container(
-        //   margin: const EdgeInsets.only(top: 8),
-        //   child: Text(
-        //     label,
-        //     style: TextStyle(
-        //       fontSize: 12,
-        //       fontWeight: FontWeight.w400,
-        //       color: color,
-        //     ),
-        //   ),
-        // ),
         Column(
           children: [
             Text(
