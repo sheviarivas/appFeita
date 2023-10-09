@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:miappfeita/pages/todos.dart';
+import 'package:miappfeita/utils/auth.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -18,7 +18,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   bool _loading = false;
 
-  Future<void> _register() async {
+  Future<void> _register(BuildContext context) async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -27,13 +27,47 @@ class _RegisterPageState extends State<RegisterPage> {
       _loading = true;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Cuenta creada exitosamente'),
-      ),
-    );
+    final username = _usernameController.value.text.toString();
+    final password = _passwordController.value.text.toString();
+    final name = _nameController.value.text.toString();
 
-    Navigator.pop(context);
+    try {
+      await Auth().register(
+        username: username,
+        password: password,
+        name: name,
+      );
+
+      if (!context.mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cuenta creada exitosamente'),
+        ),
+      );
+
+      setState(() {
+        _loading = false;
+      });
+
+      Navigator.pop(context);
+    } catch (e) {
+      final message = e.toString().substring(11);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al crear la cuenta: $message'),
+        ),
+      );
+
+      setState(() {
+        _loading = false;
+      });
+
+      return;
+    }
   }
 
   @override
@@ -122,7 +156,7 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
             ),
             ElevatedButton(
-              onPressed: _loading ? null : _register,
+              onPressed: _loading ? null : () => _register(context),
               child: _loading
                   ? const Text("Registrando...")
                   : const Text("Registrarse"),
