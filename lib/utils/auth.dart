@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Auth {
@@ -14,7 +15,7 @@ class Auth {
       {required String username, required String password}) async {
     try {
       Response response = await Dio().post(
-        'http://10.0.2.2:5000/api/v1/login',
+        '${dotenv.env['API_URL']}/login',
         data: {
           'username': username,
           'password': password,
@@ -45,7 +46,7 @@ class Auth {
       required String name}) async {
     try {
       Response response = await Dio().post(
-        'http://10.0.2.2:5000/api/v1/users',
+        '${dotenv.env['API_URL']}/users',
         data: {
           'name': name,
           'username': username,
