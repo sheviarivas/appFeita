@@ -4,9 +4,14 @@ import 'package:miappfeita/dtos/todo.dart';
 import 'package:miappfeita/shared/barra_lateral.dart';
 import 'package:miappfeita/utils/todos.dart';
 
-class TodosPage extends StatelessWidget {
+class TodosPage extends StatefulWidget {
   const TodosPage({super.key});
 
+  @override
+  State<TodosPage> createState() => _TodosPageState();
+}
+
+class _TodosPageState extends State<TodosPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -32,12 +37,16 @@ class TodosPage extends StatelessWidget {
 
             return Column(
               crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 SingleChildScrollView(
                   child: Column(
-                    children:
-                        snapshot.data!.map((e) => ItemWidget(todo: e)).toList(),
+                    children: snapshot.data!
+                        .map((e) => ItemWidget(
+                              todo: e,
+                              onDelete: () => setState(() {}),
+                            ))
+                        .toList(),
                   ),
                 ),
               ],
@@ -57,12 +66,65 @@ class ItemWidget extends StatelessWidget {
   const ItemWidget({
     super.key,
     required this.todo,
+    this.onDelete,
   });
 
   final Todo todo;
 
+  final Function? onDelete;
+
   Future<void> _deleteTask(BuildContext context) async {
-    return;
+    var confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmar'),
+        content: const Text('¿Está seguro que desea eliminar la tarea?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == null || !confirm) {
+      return;
+    }
+
+    try {
+      await Todos().deleteTodo(
+        todo.id,
+      );
+
+      if (!context.mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tarea eliminada'),
+        ),
+      );
+
+      if (onDelete != null) {
+        onDelete!();
+      }
+    } catch (e) {
+      if (!context.mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Hubo un error al eliminar la tarea'),
+        ),
+      );
+    }
   }
 
   @override
