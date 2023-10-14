@@ -68,4 +68,9 @@ class Auth {
       rethrow;
     }
   }
+
+  Future<String> getAccessToken() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('token') ?? '';
+  }
 }
