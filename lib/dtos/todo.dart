@@ -1,13 +1,13 @@
 import 'dart:convert';
 
 class Todo {
-  String id;
-  String createdBy;
-  String title;
-  String description;
-  DateTime startDate;
-  DateTime endDate;
-  Labels labels;
+  final String id;
+  final String createdBy;
+  final String title;
+  final String description;
+  final DateTime startDate;
+  final DateTime endDate;
+  final List<String> labels;
 
   Todo({
     required this.id,
@@ -30,7 +30,7 @@ class Todo {
         description: json["description"],
         startDate: DateTime.parse(json["start_date"]),
         endDate: DateTime.parse(json["end_date"]),
-        labels: Labels.fromJson(json["labels"]),
+        labels: List<String>.from(json["labels"].map((x) => x)),
       );
 
   Map<String, dynamic> toJson() => {
@@ -40,38 +40,6 @@ class Todo {
         "description": description,
         "start_date": startDate.toIso8601String(),
         "end_date": endDate.toIso8601String(),
-        "labels": labels.toJson(),
-      };
-}
-
-class Labels {
-  bool codear;
-  bool comer;
-  bool flojear;
-  bool comprar;
-
-  Labels({
-    required this.codear,
-    required this.comer,
-    required this.flojear,
-    required this.comprar,
-  });
-
-  factory Labels.fromRawJson(String str) => Labels.fromJson(json.decode(str));
-
-  String toRawJson() => json.encode(toJson());
-
-  factory Labels.fromJson(Map<String, dynamic> json) => Labels(
-        codear: json["codear"],
-        comer: json["comer"],
-        flojear: json["flojear"],
-        comprar: json["comprar"],
-      );
-
-  Map<String, dynamic> toJson() => {
-        "codear": codear,
-        "comer": comer,
-        "flojear": flojear,
-        "comprar": comprar,
+        "labels": List<dynamic>.from(labels.map((x) => x)),
       };
 }
