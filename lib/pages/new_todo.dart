@@ -133,8 +133,7 @@ class _NewTodoPageState extends State<NewTodoPage> {
                                 DateFormat('yyyy-MM-dd').format(pickedDate);
 
                             setState(() {
-                              _startDateController.text =
-                                  formattedDate; //set foratted date to TextField value.
+                              _startDateController.text = formattedDate;
                             });
                           }
                         },
@@ -180,8 +179,7 @@ class _NewTodoPageState extends State<NewTodoPage> {
                                 DateFormat('yyyy-MM-dd').format(pickedDate);
 
                             setState(() {
-                              _endDateController.text =
-                                  formattedDate; //set foratted date to TextField value.
+                              _endDateController.text = formattedDate;
                             });
                           }
                         },
@@ -216,13 +214,6 @@ class _NewTodoPageState extends State<NewTodoPage> {
                   border: OutlineInputBorder(),
                   labelText: 'Descripción',
                 ),
-                // validator: (value) {
-                //   if (value == null || value.isEmpty) {
-                //     return 'Contraseña requerida';
-                //   }
-
-                //   return null;
-                // },
               ),
             ),
             Row(
