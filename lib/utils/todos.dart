@@ -44,15 +44,82 @@ class Todos {
     }
   }
 
-  Future<void> createTodo(Todo todo) async {}
+  Future<void> createTodo(Todo todo) async {
+    try {
+      var accessToken = await Auth().getAccessToken();
+
+      Response response = await Dio().post(
+        '${dotenv.env['API_URL']}/todos',
+        data: todo.toJson(),
+        options: Options(validateStatus: (status) => status! < 500, headers: {
+          'Authorization': 'Bearer $accessToken',
+        }),
+      );
+
+      if (!response.data['success']) {
+        throw Exception(response.data['message']);
+      }
+    } catch (e) {
+      if (e is DioException) {
+        throw Exception('Hubo un error al crear el todo. Intente más tarde');
+      }
+
+      rethrow;
+    }
+  }
 
   Future<Todo?> getTodo(String id) async {
-    return null;
+    try {
+      var accessToken = await Auth().getAccessToken();
+
+      Response response = await Dio().get(
+        '${dotenv.env['API_URL']}/todos/$id',
+        options: Options(validateStatus: (status) => status! < 500, headers: {
+          'Authorization': 'Bearer $accessToken',
+        }),
+      );
+      // print("$response");
+
+      if (!response.data['success']) {
+        throw Exception(response.data['message']);
+      }
+
+      // print(Todo.fromJson(response.data['todo']));
+
+      return Todo.fromJson(response.data['todo']);
+    } catch (e) {
+      if (e is DioException) {
+        throw Exception('Hubo un error al obtener el todo. Intente más tarde');
+      }
+
+      rethrow;
+    }
   }
 
   Future<Todo?> updateTodo(Todo todo) async {
     return null;
   }
 
-  Future<void> deleteTodo(String id) async {}
+  Future<void> deleteTodo(String id) async {
+    try {
+      var accessToken = await Auth().getAccessToken();
+
+      Response response = await Dio().delete(
+        '${dotenv.env['API_URL']}/todos/$id',
+        options: Options(validateStatus: (status) => status! < 500, headers: {
+          'Authorization': 'Bearer $accessToken',
+        }),
+      );
+
+      if (!response.data['success']) {
+        throw Exception(response.data['message']);
+      }
+    } catch (e) {
+      if (e is DioException) {
+        throw Exception('Hubo un error al eliminar el todo. Intente más tarde');
+      }
+
+      rethrow;
+    }
+  }
 }

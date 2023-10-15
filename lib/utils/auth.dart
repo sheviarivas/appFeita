@@ -73,4 +73,35 @@ class Auth {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString('token') ?? '';
   }
+
+  Future<void> logout() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.remove('token');
+  }
+
+  Future<Map<String, dynamic>> getMe() async {
+    try {
+      Response response = await Dio().get(
+        '${dotenv.env['API_URL']}/users/me',
+        options: Options(
+          validateStatus: (status) => status! < 500,
+          headers: {
+            'Authorization': 'Bearer ${await getAccessToken()}',
+          },
+        ),
+      );
+
+      if (!response.data['success']) {
+        throw Exception(response.data['message']);
+      }
+
+      return response.data['user'];
+    } catch (e) {
+      if (e is DioException) {
+        throw Exception('Hubo un error al obtener los datos del usuario');
+      }
+
+      rethrow;
+    }
+  }
 }
