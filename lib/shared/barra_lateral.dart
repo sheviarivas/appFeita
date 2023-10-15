@@ -20,6 +20,8 @@ class BarraLateral extends StatelessWidget {
   }
 
   Future<void> _deleteAllTodos(BuildContext context) async {
+    Navigator.pop(context);
+
     var confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -109,6 +111,8 @@ class BarraLateral extends StatelessWidget {
               title: const Text("Nueva tarea"),
               onTap: () {
                 //debe cerrar la barra lateral y luego abrir la pagina
+                Navigator.pop(context);
+
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
                   return const NewTodoPage();
                 })).then(
@@ -129,10 +133,11 @@ class BarraLateral extends StatelessWidget {
               leading: const Icon(Icons.group_rounded),
               title: const Text("Acerca de"),
               onTap: () {
+                Navigator.pop(context);
+
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
                   return AboutPage();
                 }));
-                // Navigator.pop(context);
               },
             ),
           ],
