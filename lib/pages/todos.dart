@@ -15,8 +15,10 @@ class _TodosPageState extends State<TodosPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: const Drawer(
-        child: BarraLateral(),
+      drawer: Drawer(
+        child: BarraLateral(
+          onDelete: () => setState(() {}),
+        ),
       ),
       appBar: AppBar(
         title: const Text("Mi app feita TODO LIST"),

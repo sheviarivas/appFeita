@@ -2,20 +2,71 @@ import 'package:flutter/material.dart';
 import 'package:miappfeita/pages/about.dart';
 import 'package:miappfeita/pages/new_todo.dart';
 import 'package:miappfeita/utils/auth.dart';
+import 'package:miappfeita/utils/todos.dart';
 
-class BarraLateral extends StatefulWidget {
-  const BarraLateral({Key? key}) : super(key: key);
+class BarraLateral extends StatelessWidget {
+  final Function? onDelete;
 
-  @override
-  State<BarraLateral> createState() => _BarraLateralState();
-}
+  const BarraLateral({Key? key, this.onDelete}) : super(key: key);
 
-class _BarraLateralState extends State<BarraLateral> {
   Future<Map<String, dynamic>?> _getMe(BuildContext context) async {
     try {
       return await Auth().getMe();
     } catch (e) {
       return null;
+    }
+  }
+
+  Future<void> _deleteAllTodos(BuildContext context) async {
+    var confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmar'),
+        content:
+            const Text('¿Está seguro que desea eliminar todas las tareas?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == null || !confirm) {
+      return;
+    }
+
+    try {
+      await Todos().deleteAllTodos();
+
+      if (!context.mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tareas eliminadas exitosamente'),
+        ),
+      );
+
+      if (onDelete != null) {
+        onDelete!();
+      }
+    } catch (e) {
+      if (!context.mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Hubo un error al eliminar la tarea'),
+        ),
+      );
     }
   }
 
@@ -52,27 +103,23 @@ class _BarraLateralState extends State<BarraLateral> {
                   );
                 }),
             ListTile(
-              leading: Icon(Icons.add_box_rounded), //border_color
-              title: Text("Nueva tarea"),
+              leading: const Icon(Icons.add_box_rounded), //border_color
+              title: const Text("Nueva tarea"),
               onTap: () {
                 //debe cerrar la barra lateral y luego abrir la pagina
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return NewTodoPage();
+                  return const NewTodoPage();
                 }));
               },
             ),
             ListTile(
-              leading: Icon(Icons.cancel),
-              title: Text("Borrar todo"),
-              onTap: () {
-                // Navigator.pop(context);
-                // mostrar pop up "Está seguro?"
-                // icons check y cancel
-              },
+              leading: const Icon(Icons.cancel),
+              title: const Text("Borrar todo"),
+              onTap: () => _deleteAllTodos(context),
             ),
             ListTile(
-              leading: Icon(Icons.group_rounded),
-              title: Text("Acerca de"),
+              leading: const Icon(Icons.group_rounded),
+              title: const Text("Acerca de"),
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
                   return AboutPage();

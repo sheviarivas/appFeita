@@ -122,4 +122,28 @@ class Todos {
       rethrow;
     }
   }
+
+  Future<void> deleteAllTodos() async {
+    try {
+      var accessToken = await Auth().getAccessToken();
+
+      Response response = await Dio().delete(
+        '${dotenv.env['API_URL']}/todos',
+        options: Options(validateStatus: (status) => status! < 500, headers: {
+          'Authorization': 'Bearer $accessToken',
+        }),
+      );
+
+      if (!response.data['success']) {
+        throw Exception(response.data['message']);
+      }
+    } catch (e) {
+      if (e is DioException) {
+        throw Exception(
+            'Hubo un error al eliminar los todos. Intente más tarde');
+      }
+
+      rethrow;
+    }
+  }
 }
