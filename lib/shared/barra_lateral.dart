@@ -6,8 +6,10 @@ import 'package:miappfeita/utils/todos.dart';
 
 class BarraLateral extends StatelessWidget {
   final Function? onDelete;
+  final Function? onCreate;
 
-  const BarraLateral({Key? key, this.onDelete}) : super(key: key);
+  const BarraLateral({Key? key, this.onDelete, this.onCreate})
+      : super(key: key);
 
   Future<Map<String, dynamic>?> _getMe(BuildContext context) async {
     try {
@@ -109,7 +111,13 @@ class BarraLateral extends StatelessWidget {
                 //debe cerrar la barra lateral y luego abrir la pagina
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
                   return const NewTodoPage();
-                }));
+                })).then(
+                  (value) {
+                    if (onCreate != null) {
+                      onCreate!();
+                    }
+                  },
+                );
               },
             ),
             ListTile(

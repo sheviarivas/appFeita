@@ -17,6 +17,7 @@ class _TodosPageState extends State<TodosPage> {
     return Scaffold(
       drawer: Drawer(
         child: BarraLateral(
+          onCreate: () => setState(() {}),
           onDelete: () => setState(() {}),
         ),
       ),
