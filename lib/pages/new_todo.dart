@@ -209,7 +209,6 @@ class _NewTodoPageState extends State<NewTodoPage> {
               padding: const EdgeInsets.all(10),
               child: TextFormField(
                 controller: _taskDescriptionController,
-                obscureText: true,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: 'Descripción',
