@@ -45,8 +45,8 @@ class _LoginPageState extends State<LoginPage> {
         _loading = false;
       });
 
-      Navigator.push(context, MaterialPageRoute(builder: (context) {
-        return TodosPage();
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) {
+        return const TodosPage();
       }));
     } catch (e) {
       final message = e.toString().substring(11);
