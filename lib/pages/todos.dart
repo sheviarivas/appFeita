@@ -42,14 +42,16 @@ class _TodosPageState extends State<TodosPage> {
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                SingleChildScrollView(
-                  child: Column(
-                    children: snapshot.data!
-                        .map((e) => ItemWidget(
-                              todo: e,
-                              onDelete: () => setState(() {}),
-                            ))
-                        .toList(),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: snapshot.data!
+                          .map((e) => ItemWidget(
+                                todo: e,
+                                onDelete: () => setState(() {}),
+                              ))
+                          .toList(),
+                    ),
                   ),
                 ),
               ],
