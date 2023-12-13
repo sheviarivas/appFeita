@@ -43,7 +43,8 @@ class Auth {
   Future<void> register(
       {required String username,
       required String password,
-      required String name}) async {
+      required String name,
+      required String email}) async {
     try {
       Response response = await Dio().post(
         '${dotenv.env['API_URL']}/users',
@@ -51,6 +52,7 @@ class Auth {
           'name': name,
           'username': username,
           'password': password,
+          'email': email,
         },
         options: Options(
           validateStatus: (status) => status! < 500,

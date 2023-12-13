@@ -14,6 +14,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   bool _loading = false;
@@ -30,12 +31,14 @@ class _RegisterPageState extends State<RegisterPage> {
     final username = _usernameController.value.text.toString();
     final password = _passwordController.value.text.toString();
     final name = _nameController.value.text.toString();
+    final email = _emailController.value.text.toString();
 
     try {
       await Auth().register(
         username: username,
         password: password,
         name: name,
+        email: email,
       );
 
       if (!context.mounted) {
@@ -110,6 +113,24 @@ class _RegisterPageState extends State<RegisterPage> {
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Nombre de usuario requerido';
+                  }
+
+                  return null;
+                },
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: TextFormField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Correo electrónico',
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Correo electrónico requerido';
                   }
 
                   return null;

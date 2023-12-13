@@ -3,6 +3,7 @@ import 'package:miappfeita/pages/about.dart';
 import 'package:miappfeita/pages/new_todo.dart';
 import 'package:miappfeita/utils/auth.dart';
 import 'package:miappfeita/utils/todos.dart';
+import 'package:miappfeita/utils/gravatar.dart';
 
 class BarraLateral extends StatelessWidget {
   final Function? onDelete;
@@ -95,9 +96,36 @@ class BarraLateral extends StatelessWidget {
                         child: Text("Hubo un error al obtener los todos"),
                       );
                     }
+
+                    var name = snapshot.data!["name"];
+                    var email = snapshot.data!["email"];
+
+                    if (email == null) {
+                      var username = snapshot.data!["username"];
+
+                      return UserAccountsDrawerHeader(
+                        accountName: Text(name),
+                        accountEmail: Text("@$username"),
+                        currentAccountPicture: CircleAvatar(
+                          backgroundColor: Colors.white,
+                          child: Text(
+                            name[0],
+                            style: const TextStyle(fontSize: 40.0),
+                          ),
+                        ),
+                      );
+                    }
+
+                    var emailHash = Gravatar.generateEmailHash(email);
+
                     return UserAccountsDrawerHeader(
-                      accountName: Text(snapshot.data!["name"]),
-                      accountEmail: Text(snapshot.data!["username"]),
+                      accountName: Text(name),
+                      accountEmail: Text(email),
+                      currentAccountPicture: CircleAvatar(
+                        backgroundImage: NetworkImage(
+                          'https://gravatar.com/avatar/$emailHash',
+                        ),
+                      ),
                     );
                   }
 
