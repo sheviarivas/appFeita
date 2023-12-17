@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
 import 'package:miappfeita/dtos/todo.dart';
 import 'package:miappfeita/shared/barra_lateral.dart';
 import 'package:miappfeita/utils/todos.dart';
@@ -12,6 +15,24 @@ class TodosPage extends StatefulWidget {
 }
 
 class _TodosPageState extends State<TodosPage> {
+  String _search = '';
+  Timer? _debounce;
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      setState(() {
+        _search = query;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -24,25 +45,46 @@ class _TodosPageState extends State<TodosPage> {
       appBar: AppBar(
         title: const Text("Mi app feita TODO LIST"),
       ),
-      body: FutureBuilder(
-        future: Todos().getTodos(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          } else if (snapshot.connectionState == ConnectionState.done) {
-            if (snapshot.hasError) {
-              return const Center(
-                child: Text("Hubo un error al obtener los todos"),
-              );
-            }
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(10),
+            child: TextField(
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: 'Buscar',
+                prefixIcon: Icon(Icons.search),
+              ),
+              onChanged: (value) {
+                _onSearchChanged(value);
+              },
+            ),
+          ),
+          FutureBuilder(
+            future: Todos().getTodos(search: _search),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Expanded(
+                  child: Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              } else if (snapshot.connectionState == ConnectionState.done) {
+                if (snapshot.hasError) {
+                  return const Center(
+                    child: Text("Hubo un error al obtener los todos"),
+                  );
+                }
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Expanded(
+                if (snapshot.data!.isEmpty) {
+                  return const Center(
+                    child: Text("No hay todos"),
+                  );
+                }
+
+                return Expanded(
                   child: SingleChildScrollView(
                     child: Column(
                       children: snapshot.data!
@@ -53,15 +95,15 @@ class _TodosPageState extends State<TodosPage> {
                           .toList(),
                     ),
                   ),
-                ),
-              ],
-            );
-          }
+                );
+              }
 
-          return const Center(
-            child: Text("Hubo un error al obtener los todos"),
-          );
-        },
+              return const Center(
+                child: Text("Hubo un error al obtener los todos"),
+              );
+            },
+          ),
+        ],
       ),
     );
   }

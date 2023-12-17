@@ -12,7 +12,7 @@ class Todos {
 
   Todos._internal();
 
-  Future<List<Todo>> getTodos() async {
+  Future<List<Todo>> getTodos({String search = ''}) async {
     try {
       var accessToken = await Auth().getAccessToken();
 
@@ -21,6 +21,9 @@ class Todos {
         options: Options(validateStatus: (status) => status! < 500, headers: {
           'Authorization': 'Bearer $accessToken',
         }),
+        queryParameters: {
+          'search': search,
+        },
       );
 
       // TODO: Si retorna 401, redirigir a login
@@ -37,7 +40,8 @@ class Todos {
     } catch (e) {
       if (e is DioException) {
         throw Exception(
-            'Hubo un error al obtener los todos. Intente más tarde');
+          'Hubo un error al obtener los todos. Intente más tarde',
+        );
       }
 
       rethrow;
