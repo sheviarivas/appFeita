@@ -132,8 +132,22 @@ class ItemWidget extends StatelessWidget {
     }
   }
 
+  Color stringToColor(String inputString) {
+    final int hash = inputString.hashCode;
+    final int r = (hash & 0xFF0000) >> 16;
+    final int g = (hash & 0x00FF00) >> 8;
+    final int b = (hash & 0x0000FF);
+    return Color.fromRGBO(r, g, b, 1.0);
+  }
+
   @override
   Widget build(BuildContext context) {
+    var description = todo.description;
+
+    if (description.isEmpty) {
+      description = '(sin descripción)';
+    }
+
     return Container(
       padding: const EdgeInsets.only(bottom: 15),
       child: Column(
@@ -158,82 +172,87 @@ class ItemWidget extends StatelessWidget {
           ),
           Card(
               child: SizedBox(
-            height: 100,
             child: Container(
               padding: const EdgeInsets.all(8),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Column(
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          todo.title,
-                          textAlign: TextAlign.left,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                todo.title,
+                                textAlign: TextAlign.left,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                description,
+                                textAlign: TextAlign.left,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w400),
+                              )
+                            ],
                           ),
                         ),
-                        Text(
-                          todo.description,
-                          textAlign: TextAlign.left,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontWeight: FontWeight.w400),
+                        PopupMenuButton(
+                          onSelected: (value) {
+                            if (value == 'delete') {
+                              _deleteTask(context);
+                            } else if (value == 'edit') {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                      'Patente pendiente. Pendiente. Pendiente.'),
+                                ),
+                              );
+                            }
+                          },
+                          itemBuilder: (BuildContext bc) {
+                            return const [
+                              PopupMenuItem(
+                                value: 'edit',
+                                child: Text("Editar"),
+                              ),
+                              PopupMenuItem(
+                                value: 'delete',
+                                child: Text("Borrar"),
+                              ),
+                            ];
+                          },
                         )
                       ],
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        RawMaterialButton(
-                            shape: const CircleBorder(),
-                            onPressed: () => _deleteTask(context),
-                            child: const Icon(
-                              Icons.delete,
-                              color: Colors.redAccent,
-                              size: 40,
-                            )),
-                        Row(
-                          children: [
-                            Icon(
-                              todo.labels.any((label) => label == 'codear')
-                                  ? Icons.circle
-                                  : Icons.circle_outlined,
-                              color: Colors.orange,
-                              size: 20,
-                            ),
-                            Icon(
-                              todo.labels.any((label) => label == 'flojear')
-                                  ? Icons.circle
-                                  : Icons.circle_outlined,
-                              color: Colors.green,
-                              size: 20,
-                            ),
-                            Icon(
-                              todo.labels.any((label) => label == 'comer')
-                                  ? Icons.circle
-                                  : Icons.circle_outlined,
-                              color: Colors.blue,
-                              size: 20,
-                            ),
-                            Icon(
-                              todo.labels.any((label) => label == 'comprar')
-                                  ? Icons.circle
-                                  : Icons.circle_outlined,
-                              color: Colors.grey,
-                              size: 20,
-                            ),
-                          ],
-                        )
-                      ],
-                    ),
-                  )
+                  Wrap(
+                    spacing: 8.0, // gap between adjacent chips
+                    runSpacing: 4.0, // gap between lines
+                    children: todo.labels
+                        .map((e) => Chip(
+                              label: Text(e),
+                              backgroundColor: stringToColor(e),
+                              labelStyle: TextStyle(
+                                color: stringToColor(e).computeLuminance() > 0.5
+                                    ? Colors.black
+                                    : Colors.white,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            ))
+                        .toList(),
+                  ),
                 ],
               ),
             ),
