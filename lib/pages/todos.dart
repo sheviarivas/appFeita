@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
 import 'package:miappfeita/dtos/todo.dart';
 import 'package:miappfeita/pages/new_todo.dart';
 import 'package:miappfeita/shared/barra_lateral.dart';
@@ -13,6 +16,24 @@ class TodosPage extends StatefulWidget {
 }
 
 class _TodosPageState extends State<TodosPage> {
+  String _search = '';
+  Timer? _debounce;
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      setState(() {
+        _search = query;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,41 +57,65 @@ class _TodosPageState extends State<TodosPage> {
       appBar: AppBar(
         title: const Text("Mi app feita TODO LIST"),
       ),
-      body: FutureBuilder(
-        future: Todos().getTodos(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          } else if (snapshot.connectionState == ConnectionState.done) {
-            if (snapshot.hasError) {
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(10),
+            child: TextField(
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: 'Buscar',
+                prefixIcon: Icon(Icons.search),
+              ),
+              onChanged: (value) {
+                _onSearchChanged(value);
+              },
+            ),
+          ),
+          FutureBuilder(
+            future: Todos().getTodos(search: _search),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Expanded(
+                  child: Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              } else if (snapshot.connectionState == ConnectionState.done) {
+                if (snapshot.hasError) {
+                  return const Center(
+                    child: Text("Hubo un error al obtener los todos"),
+                  );
+                }
+
+                if (snapshot.data!.isEmpty) {
+                  return const Center(
+                    child: Text("No hay todos"),
+                  );
+                }
+
+                return Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: snapshot.data!
+                          .map((e) => ItemWidget(
+                                todo: e,
+                                onDelete: () => setState(() {}),
+                              ))
+                          .toList(),
+                    ),
+                  ),
+                );
+              }
+
               return const Center(
                 child: Text("Hubo un error al obtener los todos"),
               );
-            }
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                SingleChildScrollView(
-                  child: Column(
-                    children: snapshot.data!
-                        .map((e) => ItemWidget(
-                              todo: e,
-                              onDelete: () => setState(() {}),
-                            ))
-                        .toList(),
-                  ),
-                ),
-              ],
-            );
-          }
-          return const Center(
-            child: Text("Hubo un error al obtener los todos"),
-          );
-        },
+            },
+          ),
+        ],
       ),
     );
   }
@@ -141,8 +186,22 @@ class ItemWidget extends StatelessWidget {
     }
   }
 
+  Color stringToColor(String inputString) {
+    final int hash = inputString.hashCode;
+    final int r = (hash & 0xFF0000) >> 16;
+    final int g = (hash & 0x00FF00) >> 8;
+    final int b = (hash & 0x0000FF);
+    return Color.fromRGBO(r, g, b, 1.0);
+  }
+
   @override
   Widget build(BuildContext context) {
+    var description = todo.description;
+
+    if (description.isEmpty) {
+      description = '(sin descripción)';
+    }
+
     return Container(
       padding: const EdgeInsets.only(bottom: 15),
       child: Column(
@@ -167,82 +226,87 @@ class ItemWidget extends StatelessWidget {
           ),
           Card(
               child: SizedBox(
-            height: 100,
             child: Container(
               padding: const EdgeInsets.all(8),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Column(
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          todo.title,
-                          textAlign: TextAlign.left,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                todo.title,
+                                textAlign: TextAlign.left,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                description,
+                                textAlign: TextAlign.left,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w400),
+                              )
+                            ],
                           ),
                         ),
-                        Text(
-                          todo.description,
-                          textAlign: TextAlign.left,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontWeight: FontWeight.w400),
+                        PopupMenuButton(
+                          onSelected: (value) {
+                            if (value == 'delete') {
+                              _deleteTask(context);
+                            } else if (value == 'edit') {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                      'Patente pendiente. Pendiente. Pendiente.'),
+                                ),
+                              );
+                            }
+                          },
+                          itemBuilder: (BuildContext bc) {
+                            return const [
+                              PopupMenuItem(
+                                value: 'edit',
+                                child: Text("Editar"),
+                              ),
+                              PopupMenuItem(
+                                value: 'delete',
+                                child: Text("Borrar"),
+                              ),
+                            ];
+                          },
                         )
                       ],
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        RawMaterialButton(
-                            shape: const CircleBorder(),
-                            onPressed: () => _deleteTask(context),
-                            child: const Icon(
-                              Icons.delete,
-                              color: Colors.redAccent,
-                              size: 40,
-                            )),
-                        Row(
-                          children: [
-                            Icon(
-                              todo.labels.any((label) => label == 'codear')
-                                  ? Icons.circle
-                                  : Icons.circle_outlined,
-                              color: Colors.orange,
-                              size: 20,
-                            ),
-                            Icon(
-                              todo.labels.any((label) => label == 'flojear')
-                                  ? Icons.circle
-                                  : Icons.circle_outlined,
-                              color: Colors.green,
-                              size: 20,
-                            ),
-                            Icon(
-                              todo.labels.any((label) => label == 'comer')
-                                  ? Icons.circle
-                                  : Icons.circle_outlined,
-                              color: Colors.blue,
-                              size: 20,
-                            ),
-                            Icon(
-                              todo.labels.any((label) => label == 'comprar')
-                                  ? Icons.circle
-                                  : Icons.circle_outlined,
-                              color: Colors.grey,
-                              size: 20,
-                            ),
-                          ],
-                        )
-                      ],
-                    ),
-                  )
+                  Wrap(
+                    spacing: 8.0, // gap between adjacent chips
+                    runSpacing: 4.0, // gap between lines
+                    children: todo.labels
+                        .map((e) => Chip(
+                              label: Text(e),
+                              backgroundColor: stringToColor(e),
+                              labelStyle: TextStyle(
+                                color: stringToColor(e).computeLuminance() > 0.5
+                                    ? Colors.black
+                                    : Colors.white,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            ))
+                        .toList(),
+                  ),
                 ],
               ),
             ),
