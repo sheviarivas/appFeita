@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:miappfeita/dtos/todo.dart';
+import 'package:miappfeita/pages/new_todo.dart';
 import 'package:miappfeita/shared/barra_lateral.dart';
 import 'package:miappfeita/utils/todos.dart';
 
@@ -15,6 +16,17 @@ class _TodosPageState extends State<TodosPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          //debe cerrar la barra lateral y luego abrir la pagina
+          // Navigator.pop(context);
+
+          Navigator.push(context, MaterialPageRoute(builder: (context) {
+            return const NewTodoPage();
+          }));
+        },
+        child: const Icon(Icons.add),
+      ),
       drawer: Drawer(
         child: BarraLateral(
           onCreate: () => setState(() {}),
@@ -55,7 +67,6 @@ class _TodosPageState extends State<TodosPage> {
               ],
             );
           }
-
           return const Center(
             child: Text("Hubo un error al obtener los todos"),
           );
