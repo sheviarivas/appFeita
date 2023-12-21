@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:admob_flutter/admob_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 
 import 'package:miappfeita/dtos/todo.dart';
 import 'package:miappfeita/pages/new_todo.dart';
@@ -110,8 +111,19 @@ class _TodosPageState extends State<TodosPage> {
                 }
 
                 if (snapshot.data!.isEmpty) {
-                  return const Center(
-                    child: Text("No hay todos"),
+                  return Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(children: [
+                        Lottie.asset('assets/lotties/sad_face.json'),
+                        const Text(
+                          'No hay todos',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ]),
+                    ),
                   );
                 }
 
