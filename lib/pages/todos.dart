@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 
 import 'package:miappfeita/dtos/todo.dart';
+import 'package:miappfeita/pages/edit_todo.dart';
 import 'package:miappfeita/pages/new_todo.dart';
 import 'package:miappfeita/shared/barra_lateral.dart';
 import 'package:miappfeita/utils/todos.dart';
@@ -20,6 +21,8 @@ class TodosPage extends StatefulWidget {
 class _TodosPageState extends State<TodosPage> {
   String _search = '';
   Timer? _debounce;
+  late Future<void> _todosLoaded;
+  late List<Todo> _todos;
 
   late AdmobInterstitial interstitialAd;
 
@@ -32,6 +35,18 @@ class _TodosPageState extends State<TodosPage> {
     );
 
     interstitialAd.load();
+    _todosLoaded = _loadTodos();
+  }
+
+  Future<void> _loadTodos() async {
+    _todos = await Todos().getTodos(search: _search);
+  }
+
+  Future<void> _refreshTodos() async {
+    var todos = await Todos().getTodos(search: _search);
+    setState(() {
+      _todos = todos;
+    });
   }
 
   @override
@@ -47,6 +62,7 @@ class _TodosPageState extends State<TodosPage> {
     _debounce = Timer(const Duration(milliseconds: 500), () {
       setState(() {
         _search = query;
+        _todosLoaded = _loadTodos();
       });
     });
   }
@@ -63,15 +79,23 @@ class _TodosPageState extends State<TodosPage> {
 
             Navigator.push(context, MaterialPageRoute(builder: (context) {
               return const NewTodoPage();
-            }));
+            })).then((value) {
+              _todosLoaded = _refreshTodos();
+            });
+
+            // _todosLoaded = _refreshTodos();
           },
           child: const Icon(Icons.add),
         ),
       ),
       drawer: Drawer(
         child: BarraLateral(
-          onCreate: () => setState(() {}),
-          onDelete: () => setState(() {}),
+          onCreate: () => setState(() {
+            _todosLoaded = _refreshTodos();
+          }),
+          onDelete: () => setState(() {
+            _todosLoaded = _refreshTodos();
+          }),
         ),
       ),
       appBar: AppBar(
@@ -95,7 +119,7 @@ class _TodosPageState extends State<TodosPage> {
             ),
           ),
           FutureBuilder(
-            future: Todos().getTodos(search: _search),
+            future: _todosLoaded,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Expanded(
@@ -110,7 +134,7 @@ class _TodosPageState extends State<TodosPage> {
                   );
                 }
 
-                if (snapshot.data!.isEmpty) {
+                if (_todos.isEmpty) {
                   return Expanded(
                     child: SingleChildScrollView(
                       child: Column(children: [
@@ -130,16 +154,23 @@ class _TodosPageState extends State<TodosPage> {
                 return Expanded(
                   child: SingleChildScrollView(
                     child: Column(
-                      children: snapshot.data!
+                      children: _todos
                           .map((e) => ItemWidget(
                                 todo: e,
-                                onDelete: () => setState(() async {
+                                onEdit: () => setState(() {
+                                  _todosLoaded = _refreshTodos();
+                                }),
+                                onDelete: () async {
                                   final shouldShowAd =
                                       await interstitialAd.isLoaded;
-                                  if (shouldShowAd ?? false) {
-                                    interstitialAd.show();
-                                  }
-                                }),
+                                  setState(() {
+                                    if (shouldShowAd ?? false) {
+                                      interstitialAd.show();
+                                    }
+
+                                    _todosLoaded = _refreshTodos();
+                                  });
+                                },
                               ))
                           .toList(),
                     ),
@@ -163,15 +194,12 @@ class _TodosPageState extends State<TodosPage> {
 }
 
 class ItemWidget extends StatelessWidget {
-  const ItemWidget({
-    super.key,
-    required this.todo,
-    this.onDelete,
-  });
+  const ItemWidget({super.key, required this.todo, this.onDelete, this.onEdit});
 
   final Todo todo;
 
   final Function? onDelete;
+  final Function? onEdit;
 
   Future<void> _deleteTask(BuildContext context) async {
     var confirm = await showDialog<bool>(
@@ -218,6 +246,8 @@ class ItemWidget extends StatelessWidget {
       if (!context.mounted) {
         return;
       }
+
+      print(e);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -306,12 +336,18 @@ class ItemWidget extends StatelessWidget {
                               if (value == 'delete') {
                                 _deleteTask(context);
                               } else if (value == 'edit') {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                        'Patente pendiente. Pendiente. Pendiente.'),
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) {
+                                      return EditTodoPage(todo: todo);
+                                    },
                                   ),
-                                );
+                                ).then((value) {
+                                  if (onEdit != null) {
+                                    onEdit!();
+                                  }
+                                });
                               }
                             },
                             itemBuilder: (BuildContext bc) {

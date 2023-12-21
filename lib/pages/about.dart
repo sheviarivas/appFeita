@@ -7,8 +7,16 @@ class AboutPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text("Acerca de"),
       ),
-      body: Center(
-        child: Text('Integrantes'),
+      body: const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text("Integrantes", style: TextStyle(fontSize: 55)),
+            Text("", style: TextStyle(fontSize: 8)),
+            Text("Jorge Jara Inostroza", style: TextStyle(fontSize: 24)),
+            Text("Sebastian Hevia Rivas", style: TextStyle(fontSize: 24)),
+          ],
+        ),
       ),
     );
   }
