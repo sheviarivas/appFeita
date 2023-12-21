@@ -1,3 +1,4 @@
+import 'package:admob_flutter/admob_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:miappfeita/dtos/todo.dart';
@@ -25,6 +26,30 @@ class _NewTodoPageState extends State<NewTodoPage> {
   bool _flojear = false;
   bool _comer = false;
   bool _comprar = false;
+
+  late AdmobInterstitial interstitialAd;
+
+  @override
+  void initState() {
+    super.initState();
+
+    interstitialAd = AdmobInterstitial(
+      adUnitId: AdmobInterstitial.testAdUnitId,
+    );
+    interstitialAd.load();
+  }
+
+  @override
+  void dispose() {
+    _taskTitleController.dispose();
+    _taskDescriptionController.dispose();
+    _startDateController.dispose();
+    _endDateController.dispose();
+
+    interstitialAd.dispose();
+
+    super.dispose();
+  }
 
   Future<void> _saveTodo(BuildContext context) async {
     if (!_formKey.currentState!.validate()) {
@@ -58,15 +83,14 @@ class _NewTodoPageState extends State<NewTodoPage> {
     try {
       await Todos().createTodo(todo);
 
+      final shouldShowAd = await interstitialAd.isLoaded;
+      if (shouldShowAd ?? false) {
+        interstitialAd.show();
+      }
+
       if (!context.mounted) {
         return;
       }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Todo creado exitosamente'),
-        ),
-      );
 
       Navigator.pop(context);
     } catch (e) {

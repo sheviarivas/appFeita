@@ -41,6 +41,7 @@ dependencies:
   flutter_dotenv: ^5.1.0
   intl: ^0.18.1
   crypto: ^3.0.3
+  admob_flutter: ^3.0.0
 
 dev_dependencies:
   flutter_test:

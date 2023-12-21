@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:admob_flutter/admob_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -19,9 +20,24 @@ class _TodosPageState extends State<TodosPage> {
   String _search = '';
   Timer? _debounce;
 
+  late AdmobInterstitial interstitialAd;
+
+  @override
+  void initState() {
+    super.initState();
+
+    interstitialAd = AdmobInterstitial(
+      adUnitId: AdmobInterstitial.testAdUnitId,
+    );
+
+    interstitialAd.load();
+  }
+
   @override
   void dispose() {
     _debounce?.cancel();
+    interstitialAd.dispose();
+
     super.dispose();
   }
 
@@ -37,16 +53,19 @@ class _TodosPageState extends State<TodosPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          //debe cerrar la barra lateral y luego abrir la pagina
-          // Navigator.pop(context);
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 50.0),
+        child: FloatingActionButton(
+          onPressed: () {
+            //debe cerrar la barra lateral y luego abrir la pagina
+            // Navigator.pop(context);
 
-          Navigator.push(context, MaterialPageRoute(builder: (context) {
-            return const NewTodoPage();
-          }));
-        },
-        child: const Icon(Icons.add),
+            Navigator.push(context, MaterialPageRoute(builder: (context) {
+              return const NewTodoPage();
+            }));
+          },
+          child: const Icon(Icons.add),
+        ),
       ),
       drawer: Drawer(
         child: BarraLateral(
@@ -102,7 +121,13 @@ class _TodosPageState extends State<TodosPage> {
                       children: snapshot.data!
                           .map((e) => ItemWidget(
                                 todo: e,
-                                onDelete: () => setState(() {}),
+                                onDelete: () => setState(() async {
+                                  final shouldShowAd =
+                                      await interstitialAd.isLoaded;
+                                  if (shouldShowAd ?? false) {
+                                    interstitialAd.show();
+                                  }
+                                }),
                               ))
                           .toList(),
                     ),
@@ -115,6 +140,10 @@ class _TodosPageState extends State<TodosPage> {
               );
             },
           ),
+          AdmobBanner(
+            adUnitId: AdmobBanner.testAdUnitId,
+            adSize: AdmobBannerSize.BANNER,
+          )
         ],
       ),
     );
@@ -225,92 +254,94 @@ class ItemWidget extends StatelessWidget {
             ],
           ),
           Card(
-              child: SizedBox(
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                todo.title,
-                                textAlign: TextAlign.left,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
+            child: SizedBox(
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  todo.title,
+                                  textAlign: TextAlign.left,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                description,
-                                textAlign: TextAlign.left,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w400),
-                              )
-                            ],
+                                Text(
+                                  description,
+                                  textAlign: TextAlign.left,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w400),
+                                )
+                              ],
+                            ),
                           ),
-                        ),
-                        PopupMenuButton(
-                          onSelected: (value) {
-                            if (value == 'delete') {
-                              _deleteTask(context);
-                            } else if (value == 'edit') {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                      'Patente pendiente. Pendiente. Pendiente.'),
+                          PopupMenuButton(
+                            onSelected: (value) {
+                              if (value == 'delete') {
+                                _deleteTask(context);
+                              } else if (value == 'edit') {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                        'Patente pendiente. Pendiente. Pendiente.'),
+                                  ),
+                                );
+                              }
+                            },
+                            itemBuilder: (BuildContext bc) {
+                              return const [
+                                PopupMenuItem(
+                                  value: 'edit',
+                                  child: Text("Editar"),
                                 ),
-                              );
-                            }
-                          },
-                          itemBuilder: (BuildContext bc) {
-                            return const [
-                              PopupMenuItem(
-                                value: 'edit',
-                                child: Text("Editar"),
-                              ),
-                              PopupMenuItem(
-                                value: 'delete',
-                                child: Text("Borrar"),
-                              ),
-                            ];
-                          },
-                        )
-                      ],
+                                PopupMenuItem(
+                                  value: 'delete',
+                                  child: Text("Borrar"),
+                                ),
+                              ];
+                            },
+                          )
+                        ],
+                      ),
                     ),
-                  ),
-                  Wrap(
-                    spacing: 8.0, // gap between adjacent chips
-                    runSpacing: 4.0, // gap between lines
-                    children: todo.labels
-                        .map((e) => Chip(
-                              label: Text(e),
-                              backgroundColor: stringToColor(e),
-                              labelStyle: TextStyle(
-                                color: stringToColor(e).computeLuminance() > 0.5
-                                    ? Colors.black
-                                    : Colors.white,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                            ))
-                        .toList(),
-                  ),
-                ],
+                    Wrap(
+                      spacing: 8.0, // gap between adjacent chips
+                      runSpacing: 4.0, // gap between lines
+                      children: todo.labels
+                          .map((e) => Chip(
+                                label: Text(e),
+                                backgroundColor: stringToColor(e),
+                                labelStyle: TextStyle(
+                                  color:
+                                      stringToColor(e).computeLuminance() > 0.5
+                                          ? Colors.black
+                                          : Colors.white,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              ))
+                          .toList(),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ))
+          )
         ],
       ),
     );

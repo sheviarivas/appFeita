@@ -1,3 +1,4 @@
+import 'package:admob_flutter/admob_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:miappfeita/dtos/todo.dart';
@@ -28,6 +29,8 @@ class _EditTodoPageState extends State<EditTodoPage> {
   bool _comer = false;
   bool _comprar = false;
 
+  late AdmobInterstitial interstitialAd;
+
   @override
   void initState() {
     super.initState();
@@ -51,6 +54,23 @@ class _EditTodoPageState extends State<EditTodoPage> {
     if (widget.todo.labels.contains('comprar')) {
       _comprar = true;
     }
+
+    interstitialAd = AdmobInterstitial(
+      adUnitId: AdmobInterstitial.testAdUnitId,
+    );
+    interstitialAd.load();
+  }
+
+  @override
+  void dispose() {
+    _taskTitleController.dispose();
+    _taskDescriptionController.dispose();
+    _startDateController.dispose();
+    _endDateController.dispose();
+
+    interstitialAd.dispose();
+
+    super.dispose();
   }
 
   Future<void> _saveTodo(BuildContext context) async {
@@ -86,15 +106,14 @@ class _EditTodoPageState extends State<EditTodoPage> {
     try {
       await Todos().updateTodo(todo);
 
+      final shouldShowAd = await interstitialAd.isLoaded;
+      if (shouldShowAd ?? false) {
+        interstitialAd.show();
+      }
+
       if (!context.mounted) {
         return;
       }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Todo guardado exitosamente'),
-        ),
-      );
 
       Navigator.pop(context);
     } catch (e) {
